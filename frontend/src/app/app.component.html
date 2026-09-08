@@ -1,0 +1,441 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#" (click)="mostrarVista('principal')">
+      <i class="fas fa-utensils me-2"></i>CookHub
+    </a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link" href="#" (click)="mostrarVista('principal')">
+        <i class="fas fa-home me-1"></i>Inicio
+      </a>
+      <a class="nav-link" href="#" (click)="mostrarVista('ingredientes')">
+        <i class="fas fa-leaf me-1"></i>Ingredientes
+      </a>
+      <a class="nav-link" href="#" (click)="mostrarVista('reporte')">
+        <i class="fas fa-chart-bar me-1"></i>Reportes
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Mensajes -->
+<div class="container mt-3" *ngIf="mensaje">
+  <div class="alert alert-{{tipoMensaje}} alert-dismissible fade show" role="alert">
+    <i class="fas fa-info-circle me-2"></i>{{mensaje}}
+  </div>
+</div>
+
+<!-- Vista Principal -->
+<div *ngIf="vistaActual === 'principal'" class="container">
+  <!-- Hero Section -->
+  <div class="hero-section text-center">
+    <div class="container">
+      <h1 class="display-4 mb-3">
+        <i class="fas fa-utensils me-3"></i>CookHub
+      </h1>
+      <p class="lead">Sistema de gestión culinaria para TasteMakers</p>
+      <p>Administra el recetario completo y el inventario de ingredientes</p>
+    </div>
+  </div>
+
+  <!-- Acciones Rápidas -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card feature-card text-center p-3">
+        <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+        <h5>Agregar Receta</h5>
+        <p class="text-muted">Añade nuevas recetas al recetario</p>
+        <button class="btn btn-primary" (click)="mostrarVista('agregar-receta')">
+          <i class="fas fa-plus me-2"></i>Nueva Receta
+        </button>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card feature-card text-center p-3">
+        <i class="fas fa-leaf fa-3x text-success mb-3"></i>
+        <h5>Gestionar Ingredientes</h5>
+        <p class="text-muted">Administra el inventario de ingredientes</p>
+        <button class="btn btn-success" (click)="mostrarVista('ingredientes')">
+          <i class="fas fa-cog me-2"></i>Ver Ingredientes
+        </button>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card feature-card text-center p-3">
+        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+        <h5>Reportes</h5>
+        <p class="text-muted">Estadísticas y análisis culinarios</p>
+        <button class="btn btn-info" (click)="mostrarVista('reporte')">
+          <i class="fas fa-chart-bar me-2"></i>Ver Reportes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listado de Recetas -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-book me-2"></i>Recetario</h5>
+      <span class="badge bg-primary">{{recetas.length}} recetas</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead class="bg-dark text-white">
+            <tr>
+              <th>Receta</th>
+              <th>Tiempo</th>
+              <th>Dificultad</th>
+              <th>Porciones</th>
+              <th>Ingrediente Principal</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let receta of recetas">
+              <td><strong>{{receta.nombre}}</strong></td>
+              <td>
+                <span class="time-badge">{{receta.tiempo_preparacion}} min</span>
+              </td>
+              <td>
+                <span [class]="obtenerClaseDificultad(receta.dificultad)">{{receta.dificultad}}</span>
+              </td>
+              <td>{{receta.porciones}} personas</td>
+              <td>
+                <span class="badge bg-secondary ingredient-badge">{{obtenerNombreIngrediente(receta.ingrediente_id)}}</span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-info me-1" (click)="verDetallesReceta(receta)">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning me-1" (click)="editarReceta(receta)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="eliminarReceta(receta)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vista Agregar/Editar Receta -->
+<div *ngIf="vistaActual === 'agregar-receta'" class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-book me-2"></i>
+            {{modoEdicion ? 'Editar Receta' : 'Nueva Receta'}}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="modoEdicion ? actualizarReceta() : crearReceta()">
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label class="form-label">Nombre *</label>
+                <input type="text" class="form-control" [(ngModel)]="nuevaReceta.nombre" name="nombre" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Porciones *</label>
+                <input type="number" class="form-control" [(ngModel)]="nuevaReceta.porciones" name="porciones" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Descripción *</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="nuevaReceta.descripcion" name="descripcion" required></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Tiempo (minutos) *</label>
+                <input type="number" class="form-control" [(ngModel)]="nuevaReceta.tiempo_preparacion" name="tiempo" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Dificultad *</label>
+                <select class="form-select" [(ngModel)]="nuevaReceta.dificultad" name="dificultad" required>
+                  <option value="Fácil">Fácil</option>
+                  <option value="Medio">Medio</option>
+                  <option value="Difícil">Difícil</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Ingrediente Principal *</label>
+                <select class="form-select" [(ngModel)]="nuevaReceta.ingrediente_id" name="ingrediente" required>
+                  <option *ngFor="let ingrediente of ingredientes" [value]="ingrediente.id">{{ingrediente.nombre}}</option>
+                </select>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" (click)="mostrarVista('principal')">
+                <i class="fas fa-arrow-left me-2"></i>Cancelar
+              </button>
+              <div>
+                <button type="button" class="btn btn-info me-2" (click)="mostrarVista('ingredientes')">
+                  <i class="fas fa-leaf me-2"></i>Gestionar Ingredientes
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save me-2"></i>{{modoEdicion ? 'Actualizar' : 'Crear'}} Receta
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vista Detalles Receta -->
+<div *ngIf="vistaActual === 'detalles-receta' && recetaSeleccionada" class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Detalles de la Receta</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8">
+              <h3>{{recetaSeleccionada.nombre}}</h3>
+              <p class="text-muted mb-3">{{recetaSeleccionada.descripcion}}</p>
+              
+              <div class="row mb-3">
+                <div class="col-sm-6">
+                  <strong>Tiempo de preparación:</strong> 
+                  <span class="time-badge ms-2">{{recetaSeleccionada.tiempo_preparacion}} minutos</span>
+                </div>
+                <div class="col-sm-6">
+                  <strong>Porciones:</strong> 
+                  <span class="ms-2">{{recetaSeleccionada.porciones}} personas</span>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <div class="col-sm-6">
+                  <strong>Dificultad:</strong>
+                  <span [class]="obtenerClaseDificultad(recetaSeleccionada.dificultad)" class="ms-2">
+                    {{recetaSeleccionada.dificultad}}
+                  </span>
+                </div>
+                <div class="col-sm-6">
+                  <strong>Ingrediente Principal:</strong>
+                  <span class="badge bg-primary ms-2">{{obtenerNombreIngrediente(recetaSeleccionada.ingrediente_id)}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-secondary" (click)="mostrarVista('principal')">
+              <i class="fas fa-arrow-left me-2"></i>Volver al Recetario
+            </button>
+            <div>
+              <button class="btn btn-warning me-2" (click)="editarReceta(recetaSeleccionada)">
+                <i class="fas fa-edit me-2"></i>Editar
+              </button>
+              <button class="btn btn-danger" (click)="eliminarReceta(recetaSeleccionada)">
+                <i class="fas fa-trash me-2"></i>Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vista Ingredientes -->
+<div *ngIf="vistaActual === 'ingredientes'" class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-leaf me-2"></i>Gestión de Ingredientes</h2>
+    <button class="btn btn-primary" (click)="mostrarVista('agregar-ingrediente')">
+      <i class="fas fa-plus me-2"></i>Nuevo Ingrediente
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead class="bg-dark text-white">
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Unidad</th>
+              <th>Estado</th>
+              <th>Recetas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ingrediente of ingredientes">
+              <td><strong>{{ingrediente.nombre}}</strong></td>
+              <td>{{ingrediente.tipo}}</td>
+              <td>{{ingrediente.unidad_medida}}</td>
+              <td>
+                <span class="badge" [class]="ingrediente.disponible ? 'bg-success' : 'bg-secondary'">
+                  {{ingrediente.disponible ? 'Disponible' : 'No disponible'}}
+                </span>
+              </td>
+              <td><span class="badge bg-info">{{ingrediente.cantidad_recetas || 0}}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline-warning me-1" (click)="editarIngrediente(ingrediente)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="eliminarIngrediente(ingrediente)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <button class="btn btn-secondary" (click)="mostrarVista('principal')">
+      <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+    </button>
+  </div>
+</div>
+
+<!-- Vista Agregar/Editar Ingrediente -->
+<div *ngIf="vistaActual === 'agregar-ingrediente'" class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-leaf me-2"></i>
+            {{modoEdicion ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="modoEdicion ? actualizarIngrediente() : crearIngrediente()">
+            <div class="mb-3">
+              <label class="form-label">Nombre *</label>
+              <input type="text" class="form-control" [(ngModel)]="nuevoIngrediente.nombre" name="nombre" required>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Tipo *</label>
+                <select class="form-select" [(ngModel)]="nuevoIngrediente.tipo" name="tipo" required>
+                  <option value="">Seleccionar tipo</option>
+                  <option value="Proteína">Proteína</option>
+                  <option value="Carbohidrato">Carbohidrato</option>
+                  <option value="Vegetal">Vegetal</option>
+                  <option value="Lácteo">Lácteo</option>
+                  <option value="Condimento">Condimento</option>
+                  <option value="Fruta">Fruta</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Unidad de Medida *</label>
+                <select class="form-select" [(ngModel)]="nuevoIngrediente.unidad_medida" name="unidad" required>
+                  <option value="gramos">Gramos</option>
+                  <option value="kilogramos">Kilogramos</option>
+                  <option value="unidades">Unidades</option>
+                  <option value="litros">Litros</option>
+                  <option value="mililitros">Mililitros</option>
+                  <option value="cucharadas">Cucharadas</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="nuevoIngrediente.disponible" name="disponible" id="disponible">
+                <label class="form-check-label" for="disponible">
+                  Ingrediente disponible
+                </label>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" (click)="mostrarVista('ingredientes')">
+                <i class="fas fa-arrow-left me-2"></i>Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>{{modoEdicion ? 'Actualizar' : 'Crear'}} Ingrediente
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vista Reportes -->
+<div *ngIf="vistaActual === 'reporte'" class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar me-2"></i>Reporte de Ingredientes por Popularidad</h2>
+    <button class="btn btn-primary" (click)="cargarReporte()">
+      <i class="fas fa-sync me-2"></i>Actualizar Reporte
+    </button>
+  </div>
+
+  <!-- Resumen del Reporte -->
+  <div class="row mb-4" *ngIf="reporteData">
+    <div class="col-md-4">
+      <div class="card stats-card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{reporteData.resumen.totalRecetasSistema}}</h5>
+          <p class="card-text">Total Recetas</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card stats-card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{reporteData.resumen.totalIngredientes}}</h5>
+          <p class="card-text">Total Ingredientes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card stats-card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{reporteData.resumen.ingredienteMasPopular}}</h5>
+          <p class="card-text">Ingrediente Más Popular</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Reporte -->
+  <div class="card" *ngIf="reporteData">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead class="bg-dark text-white">
+            <tr>
+              <th>Ingrediente</th>
+              <th>Total Recetas</th>
+              <th>Tiempo Promedio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of reporteData.reporteIngredientes">
+              <td><strong>{{item.ingrediente.nombre}}</strong></td>
+              <td><span class="badge bg-primary">{{item.totalRecetas}}</span></td>
+              <td>
+                <span class="time-badge">{{item.promedio}} min</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <button class="btn btn-secondary" (click)="mostrarVista('principal')">
+      <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+    </button>
+  </div>
+</div>

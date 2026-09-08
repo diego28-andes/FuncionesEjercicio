@@ -1,0 +1,59 @@
+/* Estilos globales para CookHub */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: #fd7e14 !important;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: none;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  background-color: #fd7e14;
+  border-color: #fd7e14;
+}
+
+.btn-primary:hover {
+  background-color: #e8690b;
+  border-color: #dc5f0a;
+}
+
+.table th {
+  background-color: #343a40;
+  color: white;
+  border: none;
+}
+
+.alert {
+  border-radius: 0.5rem;
+}
+
+.recipe-card {
+  transition: transform 0.2s;
+}
+
+.recipe-card:hover {
+  transform: translateY(-2px);
+}
+
+.difficulty-easy {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.difficulty-medium {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.difficulty-hard {
+  color: #dc3545;
+  font-weight: bold;
+}

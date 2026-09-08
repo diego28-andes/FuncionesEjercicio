@@ -1,0 +1,11 @@
+# CookHub - Sistema de Gestión Culinaria
+
+La empresa TasteMakers lo ha contratado para desarrollar una aplicación llamada "CookHub" que permitirá a un chef ejecutivo gestionar todo lo relacionado con recetas e ingredientes de la cocina profesional. El chef ejecutivo debe estar pendiente de mantener actualizado el recetario y el inventario de ingredientes. Para iniciar el contrato, la empresa lo cita a una reunión para especificar sus necesidades, como se comenta a continuación.
+
+Al iniciar la aplicación el chef ejecutivo verá una pantalla principal, donde podrá ver el logo de TasteMakers, la descripción de la aplicación "CookHub", una opción para agregar receta, otra para ir al listado de ingredientes y el listado de recetas disponibles. En el listado de ingredientes se muestra nombre, tipo, unidad de medida y disponibilidad y botones para editar o borrar ingrediente, siempre y cuando no tenga recetas asociadas. En la pantalla de ingredientes, el chef ejecutivo encuentra también una opción para agregar ingrediente nuevo y otra para volver a la pantalla principal.
+
+En la opción para agregar receta, el chef ejecutivo podrá registrar nombre, descripción, tiempo de preparación, dificultad, porciones y seleccionar ingrediente principal de una lista disponible. Desde la pantalla para agregar receta el chef ejecutivo puede ingresar a una opción para gestionar ingredientes si necesita agregar uno nuevo.
+
+El listado de recetas de la página principal muestra para cada receta nombre, tiempo de preparación, dificultad e ingrediente principal, una opción que permite editar toda la información, otra que permite eliminar y una opción ver detalles. La opción de ver detalles permite consultar información completa incluyendo los datos de ingrediente principal asociado.
+
+Además, la aplicación debe incluir una funcionalidad de "Reporte de Ingredientes por Popularidad" que permite al chef ejecutivo generar estadísticas de recetas por ingrediente. El reporte muestra para cada ingrediente: la lista de ingredientes asociados, el total de recetas por ingrediente, y el ingrediente más activo de cada categoría. El sistema debe calcular automáticamente estos datos y mostrarlos organizados por popularidad.

@@ -1,0 +1,10 @@
+name: Validación automática de historias en la Wiki
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Placeholder on main"
