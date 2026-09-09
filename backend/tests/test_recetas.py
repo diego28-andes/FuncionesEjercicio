@@ -1,8 +1,14 @@
+import random
 import unittest
 from unittest.mock import MagicMock
 from app import app
+from modelos.enums import DIFICULTADES, NOMBRES_RECETAS
 from modelos.recetas import Receta
 from modelos.recetas_servicio import RecetasServicio
+from modelos.ingredientes_servicio import IngredientesServicio
+from modelos.ingredientes import Ingrediente
+from modelos.base_declarativa import Session
+from faker import Faker
 
 
 
@@ -10,6 +16,33 @@ class RecetaTestCase(unittest.TestCase):
 
     def setUp(self):
         self.client = app.test_client()
+        self.servicio = RecetasServicio()
+        self.session = Session()
+        self.faker = Faker()
+        Faker.seed(1000)
+
+        self.recetas = []
+        self.recetas_ids = []
+        ingredientes = IngredientesServicio().obtener_todos_los_ingredientes()        
+        for i in range(10):
+            dato = (
+                self.faker.unique.word(ext_word_list=NOMBRES_RECETAS),
+                self.faker.sentence(ext_word_list=NOMBRES_RECETAS),
+                random.choice(ingredientes)["id"],
+                self.faker.word(ext_word_list=DIFICULTADES),
+            )
+            self.recetas_ids.append(dato)
+            receta = Receta(
+                nombre=dato[0],
+                descripcion=dato[1],
+                tiempo_preparacion=random.randint(10, 120),
+                porciones=random.randint(1, 10),
+                ingrediente_id=dato[2],
+                dificultad=dato[3],
+            )
+            self.recetas.append(receta)
+            self.session.add(receta)
+        self.session.commit()
 
     def tearDown(self):        
         pass 

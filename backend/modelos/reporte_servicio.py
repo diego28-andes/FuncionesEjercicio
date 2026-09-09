@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from modelos.base_declarativa import Session
 from modelos.ingredientes import Ingrediente
 from modelos.recetas import Receta
@@ -28,6 +29,9 @@ class ReporteServicio:
     
     def obtener_reporte_ingrediente_mas_popular(self) -> str:
         session = Session()
-        ingrediente_mas_popular = session.query(Ingrediente).order_by(Ingrediente.nombre).first()
+        ingrediente_id = session.query(Receta).group_by(Receta.ingrediente_id).order_by(func.count(Receta.id).desc()).first().id        
+        ingrediente_mas_popular = session.query(Ingrediente).filter(Ingrediente.id == ingrediente_id).first()        
+        session.close()
         return ingrediente_mas_popular.nombre
+        
     

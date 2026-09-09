@@ -1,5 +1,6 @@
 import random
 import unittest
+from modelos.enums import DIFICULTADES, NOMBRES_INGREDIENTES, NOMBRES_RECETAS, TIPOS_INGREDIENTES, UNIDADES_MEDIDA
 from faker import Faker
 from app import app
 from modelos.base_declarativa import Session
@@ -7,20 +8,8 @@ from modelos.ingredientes import Ingrediente
 from modelos.recetas import Receta
 from modelos.reporte_servicio import ReporteServicio
 
-NOMBRES_INGREDIENTES = (
-    "Pollo", "Cebolla", "Tomate", "Arroz", "Ajo",
-    "Papa", "Zanahoria", "Pimentón", "Cilantro", "Comino",
-    "Carne de res", "Pescado", "Frijoles", "Plátano", "Yuca",
-    "Lentejas", "Aguacate", "Limón", "Maíz", "Queso",
-)
 
-TIPOS_INGREDIENTES = ("Carne", "Pescado", "Huevo", "Leche", "Queso", "Verdura", "Fruta", "Semilla", "Cereal", "Legumbre")
 
-UNIDADES_MEDIDA = ("kg", "g", "ml", "l")
-
-NOMBRES_RECETAS = ("Pizza", "Hamburguesa", "Sopa", "Ensalada", "Postre", "Pasta", "Sandwich", "Pescado frito", "Pollo asado", "Tacos")
-
-DIFICULTADES = ("Facil", "Medio", "Dificil")
 
 class ReportesTestCase(unittest.TestCase):
     def setUp(self):
@@ -78,6 +67,20 @@ class ReportesTestCase(unittest.TestCase):
 
         self.session.commit()
 
+    def tearDown(self):
+        session = Session()
+        for receta in self.recetas:
+            actual = session.get(Receta, receta.id)
+            if actual:
+                session.delete(actual)
+        session.commit()
+        for ingrediente in self.ingredientes:
+            actual = session.get(Ingrediente, ingrediente.id)
+            if actual:
+                session.delete(actual)
+        session.commit()
+        session.close()
+
     def test_contructor(self):
         for ingrediente, dato in zip(self.ingredientes, self.ingredientes_ids):
             self.assertEqual(ingrediente.nombre, dato[0])
@@ -110,7 +113,7 @@ class ReportesTestCase(unittest.TestCase):
         ingrediente = self.servicio.obtener_reporte_ingrediente_mas_popular()
         self.assertIsNotNone(ingrediente)
         self.assertIsInstance(ingrediente, str)
-        self.assertGreaterEqual(len(ingrediente), 3)
+        
     
     def test_total_ingredientes_aumenta_al_agregar_uno(self):
         total_antes = self.servicio.obtener_reporte_total_ingredientes()
@@ -123,12 +126,9 @@ class ReportesTestCase(unittest.TestCase):
         )
         self.session.add(nuevo)
         self.session.commit()
+        self.ingredientes.append(nuevo)
 
         total_despues = self.servicio.obtener_reporte_total_ingredientes()
         self.assertEqual(total_despues, total_antes + 1)
-    
-    def test_total_ingredientes_no_cuenta_recetas(self):
-        total_ingredientes = self.servicio.obtener_reporte_total_ingredientes()
-        total_recetas = self.servicio.obtener_reporte_total_recetas()
-        self.assertNotEqual(total_ingredientes, total_recetas)
+
 

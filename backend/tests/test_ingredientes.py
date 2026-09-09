@@ -1,6 +1,8 @@
 import random
-from app import app
 import unittest
+from modelos.enums import NOMBRES_INGREDIENTES,TIPOS_INGREDIENTES,UNIDADES_MEDIDA
+from modelos.base_declarativa import Session
+from app import app
 from modelos.ingredientes_servicio import IngredientesServicio
 from modelos.ingredientes import Ingrediente
 from faker import Faker
@@ -9,10 +11,31 @@ class IngredientesTestCase(unittest.TestCase):
 
     def setUp(self):
         self.client = app.test_client()
-    
-    def tearDown(self):
-        pass
+        self.servicio = IngredientesServicio()
+        self.session = Session()
+        self.faker = Faker()
+        Faker.seed(1000)
 
+        self.ingredientes = []
+        self.ingredientes_ids = []
+        for i in range(10):
+            dato = (
+                self.faker.unique.word(ext_word_list=NOMBRES_INGREDIENTES),
+                self.faker.word(ext_word_list=TIPOS_INGREDIENTES),
+                self.faker.word(ext_word_list=UNIDADES_MEDIDA),
+                True,
+            )
+            self.ingredientes_ids.append(dato)
+            ingrediente = Ingrediente(
+                nombre=dato[0],
+                tipo=dato[1],
+                unidad_medida=dato[2],
+                disponible=dato[3],
+            )
+            self.ingredientes.append(ingrediente)
+            self.session.add(ingrediente)
+        self.session.commit()
+    
 
     #region pruebas del endpoint que retorna todos los ingredientes
     def test_obtener_todos_los_ingredientes(self):
