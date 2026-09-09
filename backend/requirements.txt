@@ -3,3 +3,4 @@ Flask-RESTful==0.3.10
 Flask-CORS==4.0.0
 sqlalchemy==2.0.37
 faker==30.0.0
+coverage==7.6.1

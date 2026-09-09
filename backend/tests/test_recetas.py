@@ -12,7 +12,7 @@ class RecetaTestCase(unittest.TestCase):
         self.client = app.test_client()
 
     def tearDown(self):        
-        pass
+        pass 
 
 #region pruebas del endpoint que retorna todas las recetas
     def test_obtener_todas_las_recetas(self):

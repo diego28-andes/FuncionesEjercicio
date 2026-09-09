@@ -1,8 +1,6 @@
 import random
 import unittest
-
 from faker import Faker
-
 from app import app
 from modelos.base_declarativa import Session
 from modelos.ingredientes import Ingrediente

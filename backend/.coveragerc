@@ -1,0 +1,14 @@
+[run]
+source = .
+branch = True
+omit =
+    tests/*
+    venv/*
+    */llenado_bd.py
+
+[report]
+show_missing = True
+skip_empty = True
+fail_under = 0
+exclude_lines =
+    if __name__ == .__main__.:
