@@ -109,26 +109,86 @@ class ReportesTestCase(unittest.TestCase):
         total = self.servicio.obtener_reporte_total_recetas()
         self.assertIsInstance(total, int)
     
+    def test_total_ingredientes_aumenta_al_agregar_uno(self):
+            total_antes = self.servicio.obtener_reporte_total_ingredientes()
+
+            nuevo = Ingrediente(
+                nombre=self.faker.unique.word(ext_word_list=NOMBRES_INGREDIENTES),
+                tipo="Vegetal",
+                unidad_medida="kg",
+                disponible=True,
+            )
+            self.session.add(nuevo)
+            self.session.commit()
+            self.ingredientes.append(nuevo)
+
+            total_despues = self.servicio.obtener_reporte_total_ingredientes()
+            self.assertEqual(total_despues, total_antes + 1)
+
+
+    def test_total_ingredientes_disminuye_al_eliminar_uno(self):
+        total_antes = self.servicio.obtener_reporte_total_ingredientes()
+        ingrediente = random.choice(self.ingredientes)
+        self.session.delete(ingrediente)
+        self.session.commit()
+        self.ingredientes.remove(ingrediente)
+        total_despues = self.servicio.obtener_reporte_total_ingredientes()
+        self.assertEqual(total_despues, total_antes - 1)
+
+    def total_recetas_aumenta_al_agregar_uno(self):
+        total_antes = self.servicio.obtener_reporte_total_recetas()
+        receta = Receta(
+            nombre=self.faker.unique.word(ext_word_list=NOMBRES_RECETAS),
+            descripcion=self.faker.sentence(ext_word_list=NOMBRES_RECETAS),
+            ingrediente_id=random.choice(self.ingredientes_ids),
+            dificultad="Facil",
+        )
+        self.session.add(receta)
+        self.session.commit()
+        self.recetas.append(receta)
+        total_despues = self.servicio.obtener_reporte_total_recetas()
+        self.assertEqual(total_despues, total_antes + 1)
+
+    def total_recetas_disminuye_al_eliminar_uno(self):
+        total_antes = self.servicio.obtener_reporte_total_recetas()
+        receta = random.choice(self.recetas)
+        self.session.delete(receta)
+        self.session.commit()
+        self.recetas.remove(receta)
+        total_despues = self.servicio.obtener_reporte_total_recetas()
+        self.assertEqual(total_despues, total_antes - 1)
+    
+    def test_reporte_ingredientes_receta_popular(self):
+        total_ingredientes = self.servicio.obtener_reporte_total_ingredientes()
+        reporte_ingredientes = []
+        for ingrediente in range(total_ingredientes):
+            receta = self.servicio.obtener_receta_ingrediente(ingrediente.id)
+            promedio = sum(receta.tiempo_preparacion)/ len(receta)
+            reporte_ingredientes.append({
+                "ingrediente": {"id": ingrediente.id, "nombre": ingrediente.nombre,"tipo": ingrediente.tipo},
+                "totalRecetas": len(receta),
+                "promedio": promedio,
+            })
+        self.assertEqual(len(reporte_ingredientes), total_ingredientes)
+        self.assertIsInstance(reporte_ingredientes, list)
+        self.assertGreaterEqual(len(reporte_ingredientes), 3)
+        self.assertIsInstance(reporte_ingredientes[0], dict)
+        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"], dict)
+        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"]["id"], int)
+        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"]["nombre"], str)
+        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"]["tipo"], str)
+        self.assertIsInstance(reporte_ingredientes[0]["totalRecetas"], int)
+        self.assertIsInstance(reporte_ingredientes[0]["promedio"], float)
+
+
+
+
+
+
     def test_ingrediente_mas_popular(self):
         ingrediente = self.servicio.obtener_reporte_ingrediente_mas_popular()
         self.assertIsNotNone(ingrediente)
         self.assertIsInstance(ingrediente, str)
         
     
-    def test_total_ingredientes_aumenta_al_agregar_uno(self):
-        total_antes = self.servicio.obtener_reporte_total_ingredientes()
-
-        nuevo = Ingrediente(
-            nombre=self.faker.unique.word(ext_word_list=NOMBRES_INGREDIENTES),
-            tipo="Vegetal",
-            unidad_medida="kg",
-            disponible=True,
-        )
-        self.session.add(nuevo)
-        self.session.commit()
-        self.ingredientes.append(nuevo)
-
-        total_despues = self.servicio.obtener_reporte_total_ingredientes()
-        self.assertEqual(total_despues, total_antes + 1)
-
-
+  
