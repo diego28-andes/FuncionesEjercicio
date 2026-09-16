@@ -1,10 +1,27 @@
 name: Validación automática de historias en la Wiki
 
 on:
-  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]    
 
 jobs:
-  placeholder:
+  job1:
+    name: Pruebas
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Placeholder on main"
+    - name: Checkout de repositorio
+      uses: actions/checkout@v2
+    - name: Configurar Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    - name:  Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: correr pruebas
+      id: correr-pruebas
+      run: python -m unittest discover -s tests
+      
