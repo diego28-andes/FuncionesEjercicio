@@ -70,12 +70,18 @@ class ReportesTestCase(unittest.TestCase):
     def tearDown(self):
         session = Session()
         for receta in self.recetas:
-            actual = session.get(Receta, receta.id)
+            receta_id = receta.__dict__.get("id")
+            if receta_id is None:
+                continue
+            actual = session.get(Receta, receta_id)
             if actual:
                 session.delete(actual)
         session.commit()
         for ingrediente in self.ingredientes:
-            actual = session.get(Ingrediente, ingrediente.id)
+            ingrediente_id = ingrediente.__dict__.get("id")
+            if ingrediente_id is None:
+                continue
+            actual = session.get(Ingrediente, ingrediente_id)
             if actual:
                 session.delete(actual)
         session.commit()
@@ -108,6 +114,48 @@ class ReportesTestCase(unittest.TestCase):
     def test_total_recetas_es_entero(self):
         total = self.servicio.obtener_reporte_total_recetas()
         self.assertIsInstance(total, int)
+
+    def test_total_recetas_sin_recetas_lanza_error(self):
+        nombres_del_setup = {receta.nombre for receta in self.recetas}
+        recetas_backup = [
+            {
+                "nombre": receta.nombre,
+                "descripcion": receta.descripcion,
+                "tiempo_preparacion": receta.tiempo_preparacion,
+                "dificultad": receta.dificultad,
+                "porciones": receta.porciones,
+                "ingrediente_id": receta.ingrediente_id,
+            }
+            for receta in self.session.query(Receta).all()
+        ]
+
+        self.session.query(Receta).delete()
+        self.session.commit()
+
+        try:
+            with self.assertRaises(ValueError) as error:
+                self.servicio.obtener_reporte_total_recetas()
+            self.assertEqual(str(error.exception), "No hay recetas en el sistema")
+        finally:
+            for dato in recetas_backup:
+                self.session.add(Receta(**dato))
+            self.session.commit()
+            self.recetas = [
+                receta
+                for receta in self.session.query(Receta).all()
+                if receta.nombre in nombres_del_setup
+            ]
+
+    def test_total_ingredientes_sin_ingredientes_lanza_error(self):
+        self.recetas = []
+        self.ingredientes = []
+        self.session.query(Receta).delete()
+        self.session.query(Ingrediente).delete()
+        self.session.commit()
+
+        with self.assertRaises(ValueError) as error:
+            self.servicio.obtener_reporte_total_ingredientes()
+        self.assertEqual(str(error.exception), "No hay ingredientes en el sistema")
     
     def test_total_ingredientes_aumenta_al_agregar_uno(self):
             total_antes = self.servicio.obtener_reporte_total_ingredientes()
@@ -159,31 +207,61 @@ class ReportesTestCase(unittest.TestCase):
         self.assertEqual(total_despues, total_antes - 1)
     
     def test_reporte_ingredientes_receta_popular(self):
-        total_ingredientes = self.servicio.obtener_reporte_total_ingredientes()
-        reporte_ingredientes = []
-        for ingrediente in range(total_ingredientes):
-            receta = self.servicio.obtener_receta_ingrediente(ingrediente.id)
-            promedio = sum(receta.tiempo_preparacion)/ len(receta)
-            reporte_ingredientes.append({
-                "ingrediente": {"id": ingrediente.id, "nombre": ingrediente.nombre,"tipo": ingrediente.tipo},
-                "totalRecetas": len(receta),
-                "promedio": promedio,
-            })
-        self.assertEqual(len(reporte_ingredientes), total_ingredientes)
-        self.assertIsInstance(reporte_ingredientes, list)
-        self.assertGreaterEqual(len(reporte_ingredientes), 3)
-        self.assertIsInstance(reporte_ingredientes[0], dict)
-        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"], dict)
-        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"]["id"], int)
-        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"]["nombre"], str)
-        self.assertIsInstance(reporte_ingredientes[0]["ingrediente"]["tipo"], str)
-        self.assertIsInstance(reporte_ingredientes[0]["totalRecetas"], int)
-        self.assertIsInstance(reporte_ingredientes[0]["promedio"], float)
+        obtener_reporte_ingredientes_receta_popular = self.servicio.obtener_reporte_ingredientes_receta_popular()
+        self.assertIsNotNone(obtener_reporte_ingredientes_receta_popular)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular, list)
+        self.assertGreaterEqual(len(obtener_reporte_ingredientes_receta_popular), 3)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0], dict)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0]["ingrediente"], dict)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0]["ingrediente"]["id"], int)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0]["ingrediente"]["nombre"], str)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0]["ingrediente"]["tipo"], str)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0]["totalRecetas"], int)
+        self.assertIsInstance(obtener_reporte_ingredientes_receta_popular[0]["promedio"], float)
 
+    def test_reporte_calcula_total_y_promedio_de_un_ingrediente(self):
+        ingrediente = Ingrediente(
+            nombre="Aji criollo",
+            tipo="Vegetal",
+            unidad_medida="g",
+            disponible=True,
+        )
+        self.session.add(ingrediente)
+        self.session.commit()
+        self.ingredientes.append(ingrediente)
 
+        for indice, tiempo in enumerate((10, 20, 30)):
+            receta = Receta(
+                nombre=f"Salsa de aji {indice}",
+                descripcion="Receta de control para el promedio",
+                tiempo_preparacion=tiempo,
+                dificultad="Facil",
+                porciones=2,
+                ingrediente_id=ingrediente.id,
+            )
+            self.session.add(receta)
+            self.recetas.append(receta)
+        self.session.commit()
 
+        reporte = self.servicio.obtener_reporte_ingredientes_receta_popular()
+        item = next(
+            fila for fila in reporte
+            if fila["ingrediente"]["id"] == ingrediente.id
+        )
 
+        self.assertEqual(item["totalRecetas"], 3)
+        self.assertEqual(item["promedio"], 20.0)
 
+    def test_reporte_sin_ingredientes_lanza_error(self):
+        self.recetas = []
+        self.ingredientes = []
+        self.session.query(Receta).delete()
+        self.session.query(Ingrediente).delete()
+        self.session.commit()
+
+        with self.assertRaises(ValueError) as error:
+            self.servicio.obtener_reporte_ingredientes_receta_popular()
+        self.assertEqual(str(error.exception), "No hay ingredientes en el sistema")
 
     def test_ingrediente_mas_popular(self):
         ingrediente = self.servicio.obtener_reporte_ingrediente_mas_popular()
