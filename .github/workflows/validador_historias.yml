@@ -25,9 +25,7 @@ jobs:
     - name: correr pruebas
       id: correr-pruebas
       working-directory: backend
-      run: python -m unittest -v tests/test_recetas.py
-      run: python -m unittest -v tests/test_ingredientes.py
-      run: python -m unittest -v tests/test_reportes.py
+      run: python -m unittest discover tests -v    
     - name: Publicar resultados
       uses: actions/upload-artifact@v2
       with:
